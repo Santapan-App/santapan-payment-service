@@ -144,11 +144,12 @@ func (th *AuthHandler) Register(c echo.Context) (err error) {
 		return json.Response(c, http.StatusBadRequest, false, "Email has already taken", nil)
 	}
 
+	hashPassword, err := bcrypt.GenerateFromPassword([]byte(registerBody.Password), bcrypt.DefaultCost)
 	// Insert User
 	user := domain.User{
 		FullName: registerBody.FullName,
 		Email:    registerBody.Email,
-		Password: registerBody.Password,
+		Password: string(hashPassword),
 	}
 
 	if err = th.UserService.Store(ctx, &user); err != nil {
