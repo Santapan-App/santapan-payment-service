@@ -57,7 +57,7 @@ func (m *PostgresTokenCommandRepository) Delete(ctx context.Context, id int64) (
 }
 
 func (m *PostgresTokenCommandRepository) Update(ctx context.Context, token *domain.Token) (err error) {
-	query := `UPDATE token SET refresh_token = $1, user_id = $2 WHERE id = $4`
+	query := `UPDATE token SET refresh_token = $1, user_id = $2 WHERE id = $3`
 	stmt, err := m.Conn.PrepareContext(ctx, query)
 	if err != nil {
 		return fmt.Errorf("failed to prepare update query: %w", err)

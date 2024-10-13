@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/go-playground/validator.v9"
 )
@@ -111,6 +112,7 @@ func (th *AuthHandler) Login(c echo.Context) (err error) {
 		refreshData.ID = existingToken.ID
 		refreshData.CreatedAt = existingToken.CreatedAt
 		if err = th.TokenService.Update(ctx, &refreshData); err != nil {
+			logrus.Info(err)
 			return json.Response(c, http.StatusInternalServerError, false, "Failed to update refresh token", nil)
 		}
 	} else {
