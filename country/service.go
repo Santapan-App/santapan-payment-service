@@ -2,7 +2,7 @@ package country
 
 import (
 	"context"
-	"tobby/domain"
+	"santapan/domain"
 )
 
 type PostgresRepositoryQueries interface {

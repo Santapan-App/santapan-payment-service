@@ -2,8 +2,8 @@ package device
 
 import (
 	"context"
+	"santapan/domain"
 	"time"
-	"tobby/domain"
 )
 
 type PostgresRepositoryQueries interface {

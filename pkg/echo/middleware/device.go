@@ -2,7 +2,7 @@ package echo
 
 import (
 	"log"
-	"tobby/domain"
+	"santapan/domain"
 
 	"github.com/labstack/echo/v4"
 )

@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"tobby/domain"
+	"santapan/domain"
 )
 
 type PostgresOtpCommandRepository struct {

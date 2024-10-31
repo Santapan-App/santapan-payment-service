@@ -2,8 +2,8 @@ package user
 
 import (
 	"context"
+	"santapan/domain"
 	"time"
-	"tobby/domain"
 )
 
 // ArticleRepository represent the article's repository contract

@@ -4,14 +4,16 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"santapan/article"
+	"santapan/category"
+	postgresCommands "santapan/internal/repository/postgres/commands"
+	postgresQueries "santapan/internal/repository/postgres/queries"
+	"santapan/internal/rest"
+	pkgEcho "santapan/pkg/echo"
+	"santapan/pkg/sql"
+	"santapan/token"
+	"santapan/user"
 	"syscall"
-	postgresCommands "tobby/internal/repository/postgres/commands"
-	postgresQueries "tobby/internal/repository/postgres/queries"
-	"tobby/internal/rest"
-	pkgEcho "tobby/pkg/echo"
-	"tobby/pkg/sql"
-	"tobby/token"
-	"tobby/user"
 
 	"github.com/joho/godotenv"
 )
@@ -37,13 +39,22 @@ func main() {
 	tokenQueryRepo := postgresQueries.NewPostgresTokenQueryRepository(conn)
 	tokenCommandRepo := postgresCommands.NewPostgresTokenCommandRepository(conn)
 
+	articleQueryRepo := postgresQueries.NewArticleRepository(conn)
+	articleCommandRepo := postgresQueries.NewArticleRepository(conn)
+
+	categoryQueryRepo := postgresQueries.NewCategoryRepository(conn)
+	categoryCommandRepo := postgresQueries.NewCategoryRepository(conn)
+
 	tokenService := token.NewService(tokenQueryRepo, tokenCommandRepo)
 	userService := user.NewService(userQueryRepo, userQueryCommand)
+	articleService := article.NewService(articleQueryRepo, articleCommandRepo)
+	categoryService := category.NewService(categoryQueryRepo, categoryCommandRepo)
 
 	e := pkgEcho.Setup()
 
 	rest.NewAuthHandler(e, tokenService, userService)
-
+	rest.NewArticleHandler(e, articleService)
+	rest.NewCategoryHandler(e, categoryService)
 	go func() {
 		pkgEcho.Start(e)
 	}()

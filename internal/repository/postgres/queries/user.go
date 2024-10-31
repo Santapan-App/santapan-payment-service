@@ -3,7 +3,7 @@ package queries
 import (
 	"context"
 	"database/sql"
-	"tobby/domain"
+	"santapan/domain"
 
 	"github.com/sirupsen/logrus"
 )

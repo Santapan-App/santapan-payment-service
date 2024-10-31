@@ -2,8 +2,8 @@ package token
 
 import (
 	"context"
+	"santapan/domain"
 	"time"
-	"tobby/domain"
 )
 
 type PostgresRepositoryQueries interface {
