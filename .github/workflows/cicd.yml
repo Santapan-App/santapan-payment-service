@@ -88,11 +88,14 @@ jobs:
               sleep 2
             fi
           done
-      - name: Check Current Directory and List Files
-        run: |
-          ls -a
       - name: Run Migrations
-        run: make migrate-up
-
+        run: |
+          docker run --rm \
+            -e DATABASE_HOST=postgres-container \
+            -e DATABASE_PORT=5432 \
+            -e DATABASE_USER=user \
+            -e DATABASE_PASSWORD=s4nt4p4nDatab4s3 \
+            -e DATABASE_NAME=santapan_db \
+            janfalih/santapan-api migrate
       - name: Run Docker Container
         run: docker run -d -p 9090:9090 --name santapan-app-container janfalih/santapan-api

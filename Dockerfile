@@ -23,9 +23,6 @@ WORKDIR /app
 EXPOSE 9090
 
 COPY --from=builder /app/engine /app/
-COPY --from=builder Makefile /app/
-COPY --from=builder /migrations /app/migrations
-COPY --from=builder /app/misc /app/misc
 
 # Copy the .env file from the current context
 COPY .env /app/
