@@ -10,6 +10,9 @@ COPY . .
 
 RUN make build
 
+# Install golang-migrate
+RUN go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
 # Distribution
 FROM alpine:latest
 
@@ -23,6 +26,7 @@ WORKDIR /app
 EXPOSE 9090
 
 COPY --from=builder /app/engine /app/
+COPY --from=builder /go/bin/migrate /usr/local/bin/migrate
 
 # Copy the .env file from the current context
 COPY .env /app/
