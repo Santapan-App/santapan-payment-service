@@ -23,7 +23,6 @@ WORKDIR /app
 EXPOSE 9090
 
 COPY --from=builder /app/engine /app/
-
 # Copy the .env file from the current context
 COPY .env /app/
 
