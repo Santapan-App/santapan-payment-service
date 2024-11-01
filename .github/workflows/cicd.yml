@@ -18,7 +18,7 @@ jobs:
           DEBUG=True
           SERVER_ADDRESS=:9090
           CONTEXT_TIMEOUT=2
-          DATABASE_HOST=172.17.0.2
+          DATABASE_HOST=postgres-container
           DATABASE_PORT=5432
           DATABASE_USER=user
           DATABASE_PASSWORD=s4nt4p4nDatab4s3
@@ -57,14 +57,26 @@ jobs:
     steps:
       - name: Pull Docker Image
         run: docker pull janfalih/santapan-api:latest
+
+      - name: Remove Docker Containers
+        run: |
+          docker rm -f postgres-container || true
+          docker rm -f santapan-app-container || true
       
-      - name: Remove Docker Container
-        run: docker rm -f santapan-app-container || true
-      
+      - name: Start PostgreSQL Container
+        run: |
+          docker run -d \
+            --name postgres-container \
+            -e POSTGRES_USER=user \
+            -e POSTGRES_PASSWORD=s4nt4p4nDatab4s3 \
+            -e POSTGRES_DB=santapan_db \
+            -p 5432:5432 \
+            postgres:latest
+
       - name: Wait for PostgreSQL to be ready
         run: |
           for i in {1..30}; do
-            if pg_isready -h 172.17.0.2 -p 5432 -U user; then
+            if docker exec postgres-container pg_isready -U user; then
               echo "PostgreSQL is ready!"
               break
             else
@@ -78,4 +90,3 @@ jobs:
 
       - name: Run Docker Container
         run: docker run -d -p 9090:9090 --name santapan-app-container janfalih/santapan-api
-
