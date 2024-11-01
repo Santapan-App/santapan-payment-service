@@ -10,6 +10,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
       - name: Create Environment File
         run: |
           echo "DEBUG=True" >> .env
@@ -21,19 +22,28 @@ jobs:
           echo "DATABASE_PASSWORD=s4nt4p4nDatab4s3" >> .env
           echo "DATABASE_NAME=santapan_db" >> .env
           echo "PORT=9090" >> .env
+      
+      - name: Check .env File
+        run: cat .env
+      
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      
       - name: Build Docker Image
         run: docker build -t janfalih/santapan-api .
+      
       - name: Push Docker Image To Docker Hub
         run: docker push janfalih/santapan-api:latest
+
   deploy:
     needs: build
     runs-on: self-hosted
     steps:
       - name: Pull Docker Image
         run: docker pull janfalih/santapan-api:latest
+      
       - name: Remove Docker Container
         run: docker rm -f santapan-app-container || true
+      
       - name: Run Docker Container
-        run: docker run -d -p 9090:9090 --name santapan-app-container janfalih/santapan-api
+        run: docker run -d -p 9090:9090 --name santapan-app-container --env-file .env janfalih/santapan-api
