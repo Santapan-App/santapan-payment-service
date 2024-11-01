@@ -20,7 +20,7 @@ RUN apk update && apk upgrade && \
 WORKDIR /app 
 
 # Expose HTTP port
-EXPOSE 9090 50051
+EXPOSE 9090
 
 COPY --from=builder /app/engine /app/
 

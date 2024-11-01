@@ -3,7 +3,7 @@ name: Deploy Go Application
 on:
   push:
     branches:
-      - deploy-to-ec2
+      - main
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,8 +17,8 @@ jobs:
           echo "CONTEXT_TIMEOUT=2" >> .env
           echo "DATABASE_HOST=localhost" >> .env
           echo "DATABASE_PORT=5432" >> .env
-          echo "DATABASE_USER=${{ secrets.DATABASE_USER }}" >> .env
-          echo "DATABASE_PASSWORD=" >> .env
+          echo "DATABASE_USER=user" >> .env
+          echo "DATABASE_PASSWORD=s4nt4p4nDatab4s3" >> .env
           echo "DATABASE_NAME=santapan_db" >> .env
           echo "PORT=9090" >> .env
       - name: Login to Docker Hub
