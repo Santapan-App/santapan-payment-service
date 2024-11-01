@@ -28,6 +28,9 @@ jobs:
       
       - name: Check .env File Creation
         run: |
+          echo "Current working directory:"
+          pwd  # Print the current working directory
+          
           if [ -f .env ]; then
             echo ".env file created successfully."
             cat .env
@@ -40,7 +43,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: env-file
-          path: .env
+          path: .env  # Make sure this matches the path where .env is created
 
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
@@ -62,6 +65,9 @@ jobs:
       
       - name: Check .env File on Host
         run: |
+          echo "Current working directory on host:"
+          pwd  # Print the current working directory on the host
+          
           if [ -f .env ]; then
             echo ".env file downloaded successfully."
             cat .env || echo ".env file not found"
