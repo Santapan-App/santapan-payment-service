@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - deploy-cicd
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,6 +27,12 @@ jobs:
       - name: Check .env File
         run: cat .env
       
+      - name: Upload .env File
+        uses: actions/upload-artifact@v2
+        with:
+          name: env-file
+          path: .env
+
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
       
@@ -39,14 +46,19 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
+      - name: Download .env File
+        uses: actions/download-artifact@v2
+        with:
+          name: env-file
+      
+      - name: Check .env File on Host
+        run: cat .env || echo ".env file not found"
+      
       - name: Pull Docker Image
         run: docker pull janfalih/santapan-api:latest
       
       - name: Remove Docker Container
         run: docker rm -f santapan-app-container || true
-
-      - name: Check .env File on Host
-        run: cat .env || echo ".env file not found"
-
+      
       - name: Run Docker Container
         run: docker run -d -p 9090:9090 --name santapan-app-container --env-file .env janfalih/santapan-api
