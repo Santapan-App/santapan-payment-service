@@ -91,11 +91,13 @@ jobs:
       - name: Run Migrations
         run: |
           docker run --rm \
-            -e DATABASE_HOST=postgres-container \
-            -e DATABASE_PORT=5432 \
-            -e DATABASE_USER=user \
-            -e DATABASE_PASSWORD=s4nt4p4nDatab4s3 \
-            -e DATABASE_NAME=santapan_db \
-            janfalih/santapan-api migrate
+            --network host \
+            janfalih/santapan-api \
+            migrate -path /app/migrations -database "postgres://user:s4nt4p4nDatab4s3@localhost:5432/santapan_db" drop -f
+          
+          docker run --rm \
+            --network host \
+            janfalih/santapan-api \
+            migrate -path /app/migrations -database "postgres://user:s4nt4p4nDatab4s3@localhost:5432/santapan_db" up
       - name: Run Docker Container
         run: docker run -d -p 9090:9090 --name santapan-app-container janfalih/santapan-api
