@@ -1,9 +1,9 @@
 name: Deploy Go Application
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
+      - deploy-cicd
 jobs:
   build:
     runs-on: ubuntu-latest
