@@ -59,6 +59,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential
+          
+      - name: Create Docker Network
+        run: |
+          docker network create santapan_network || true  # Create network if it doesn't exist
+
       - name: Pull Docker Image
         run: docker pull janfalih/santapan-api:latest
 
@@ -71,6 +76,7 @@ jobs:
         run: |
           docker run -d \
             --name postgres-container \
+            --network santapan_network \  # Connect to the network
             -e POSTGRES_USER=user \
             -e POSTGRES_PASSWORD=s4nt4p4nDatab4s3 \
             -e POSTGRES_DB=santapan_db \
@@ -88,5 +94,11 @@ jobs:
               sleep 2
             fi
           done
+      
       - name: Run Docker Container
-        run: docker run -d -p 9090:9090 --name santapan-app-container janfalih/santapan-api
+        run: |
+          docker run -d \
+            --name santapan-app-container \
+            --network santapan_network \  # Connect to the same network
+            -p 9090:9090 \
+            janfalih/santapan-api
