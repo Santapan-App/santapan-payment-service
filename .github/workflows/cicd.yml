@@ -11,6 +11,35 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Create Environment File
+        run: |
+          cat <<EOF > .env
+          DEBUG=True
+          SERVER_ADDRESS=:9090
+          CONTEXT_TIMEOUT=2
+          DATABASE_HOST=localhost
+          DATABASE_PORT=5432
+          DATABASE_USER=user
+          DATABASE_PASSWORD=s4nt4p4nDatab4s3
+          DATABASE_NAME=santapan_db
+          PORT=9090
+          EOF
+      
+      - name: Check .env File Creation
+        run: |
+          echo "Current working directory:"
+          pwd  # Print the current working directory
+          
+          if [ -f .env ]; then
+            echo ".env file created successfully."
+            echo "Listing all files including hidden files:"
+            ls -a  # List all files in the current directory
+            cat .env
+          else
+            echo ".env file not found."
+            exit 1  # Fail the job if the .env file is not found
+          fi
 
       - name: Login to Docker Hub
         if: success()  # Only run if previous steps were successful
@@ -26,19 +55,27 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
-      - name: Create Environment File
+      - name: Download .env File
+        uses: actions/download-artifact@v3
+        with:
+          name: env-file
+      
+      - name: Check .env File on Host
         run: |
-          cat <<EOF > .env
-          DEBUG=True
-          SERVER_ADDRESS=:9090
-          CONTEXT_TIMEOUT=2
-          DATABASE_HOST=localhost
-          DATABASE_PORT=5432
-          DATABASE_USER=user
-          DATABASE_PASSWORD=s4nt4p4nDatab4s3
-          DATABASE_NAME=santapan_db
-          PORT=9090
-          EOF
+          echo "Current working directory on host:"
+          pwd  # Print the current working directory on the host
+          
+          echo "Listing all files including hidden files on host:"
+          ls -a  # List all files in the current directory on the host
+          
+          if [ -f .env ]; then
+            echo ".env file downloaded successfully."
+            cat .env || echo ".env file not found"
+          else
+            echo ".env file not found after download."
+            exit 1  # Fail the job if the .env file is not found
+          fi
+      
       - name: Pull Docker Image
         run: docker pull janfalih/santapan-api:latest
       
@@ -46,4 +83,4 @@ jobs:
         run: docker rm -f santapan-app-container || true
       
       - name: Run Docker Container
-        run: docker run -d -p 9090:9090 --name santapan-app-container --env-file .env janfalih/santapan-api
+        run: docker run -d -p 9090:9090 --name santapan-app-container janfalih/santapan-api
