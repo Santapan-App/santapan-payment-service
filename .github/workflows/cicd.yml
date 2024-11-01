@@ -84,9 +84,6 @@ jobs:
               sleep 2
             fi
           done
-      
-      - name: Run Migrations
-        run: make migrate-up
 
       - name: Run Docker Container
         run: docker run -d -p 9090:9090 --name santapan-app-container janfalih/santapan-api
