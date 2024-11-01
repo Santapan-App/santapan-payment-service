@@ -15,6 +15,9 @@ import (
 	"santapan/user"
 	"syscall"
 
+	"fmt"
+
+	"github.com/golang-migrate/migrate/v4"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq" // Import the PostgreSQL driver
 )
@@ -34,6 +37,12 @@ func main() {
 	conn := sql.Setup()
 	defer sql.Close(conn)
 
+	// Run migrations
+	if err := runMigrations(); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+
+	// Setup repositories and services
 	userQueryRepo := postgresQueries.NewPostgresUserQueryRepository(conn)
 	userQueryCommand := postgresCommands.NewPostgresUserCommandRepository(conn)
 
@@ -68,4 +77,34 @@ func main() {
 	<-quit
 
 	pkgEcho.Shutdown(e, defaultTimeout)
+}
+
+// runMigrations runs the database migrations
+func runMigrations() error {
+	// Build the database connection string from environment variables
+	databaseHost := os.Getenv("DATABASE_HOST")
+	databasePort := os.Getenv("DATABASE_PORT")
+	databaseUser := os.Getenv("DATABASE_USER")
+	databasePassword := os.Getenv("DATABASE_PASSWORD")
+	databaseName := os.Getenv("DATABASE_NAME")
+
+	// Format the connection string
+	connectionString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		databaseUser, databasePassword, databaseHost, databasePort, databaseName)
+
+	// Create a new migration instance
+	m, err := migrate.New(
+		"file://app/migrations", // Update the path to your migrations directory
+		connectionString,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Perform the migrations
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+
+	return nil
 }
