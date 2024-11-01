@@ -25,7 +25,8 @@ EXPOSE 9090
 COPY --from=builder /app/engine /app/
 # Copy the .env file from the current context
 COPY .env /app/
-
-RUN make migrate-up
+COPY /migrations /app/migrations
+COPY Makefile /app/
+COPY /misc /app/misc
 
 CMD /app/engine
