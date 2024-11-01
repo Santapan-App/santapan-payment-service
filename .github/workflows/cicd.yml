@@ -90,14 +90,18 @@ jobs:
           done
       - name: Run Migrations
         run: |
+          # Drop all tables in the database
           docker run --rm \
             --network host \
+            -v $(pwd)/migrations:/app/migrations \
             janfalih/santapan-api \
-            migrate -path /app/migrations -database "postgres://user:s4nt4p4nDatab4s3@localhost:5432/santapan_db" drop -f
-          
+            migrate -path /app/migrations -database "postgres://user:s4nt4p4nDatab4s3@172.17.0.2:5432/santapan_db" drop -f
+
+          # Run the migrations to set up the database
           docker run --rm \
             --network host \
+            -v $(pwd)/migrations:/app/migrations \
             janfalih/santapan-api \
-            migrate -path /app/migrations -database "postgres://user:s4nt4p4nDatab4s3@localhost:5432/santapan_db" up
+            migrate -path /app/migrations -database "postgres://user:s4nt4p4nDatab4s3@172.17.0.2:5432/santapan_db" up
       - name: Run Docker Container
         run: docker run -d -p 9090:9090 --name santapan-app-container janfalih/santapan-api
