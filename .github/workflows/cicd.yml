@@ -44,6 +44,9 @@ jobs:
       
       - name: Remove Docker Container
         run: docker rm -f santapan-app-container || true
-      
+
+      - name: Check .env File on Host
+        run: cat .env || echo ".env file not found"
+
       - name: Run Docker Container
         run: docker run -d -p 9090:9090 --name santapan-app-container --env-file .env janfalih/santapan-api
