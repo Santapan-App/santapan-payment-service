@@ -1,7 +1,7 @@
 name: Deploy Go Application
 
 on:
-  push:
+  pull_request:
     branches:
       - deploy-cicd
 jobs:
