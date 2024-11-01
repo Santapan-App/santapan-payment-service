@@ -26,7 +26,7 @@ COPY --from=builder /app/engine /app/
 # Copy the .env file from the current context
 COPY .env /app/
 COPY /migrations /app/migrations
-COPY Makefile /app/
+COPY Makefile .
 COPY /misc /app/misc
 
 CMD /app/engine

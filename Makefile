@@ -1,7 +1,7 @@
 # Database
 POSTGRES_USER ?= user
 POSTGRES_PASSWORD ?= s4nt4p4nDatab4s3
-POSTGRES_ADDRESS ?= 127.0.0.1:5432
+POSTGRES_ADDRESS ?= 172.17.0.2:5432
 POSTGRES_DATABASE ?= santapan_db
 
 # Exporting bin folder to the path for makefile
