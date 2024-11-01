@@ -27,9 +27,10 @@ EXPOSE 9090
 
 COPY --from=builder /app/engine /app/
 COPY --from=builder /go/bin/migrate /usr/local/bin/migrate
+COPY --from=builder /app/migrations /app/migrations
 
 # Copy the .env file from the current context
 COPY .env /app/
 
-CMD ["sh", "-c", "migrate -path /migrations -database 'postgres://user:s4nt4p4nDatab4s3@postgres-container:5432/santapan_db?sslmode=disable' down && migrate -path /migrations -database 'postgres://user:s4nt4p4nDatab4s3@postgres-container:5432/santapan_db?sslmode=disable' up && /app/engine"]
+CMD ["sh", "-c", "ls -la /app/migrations && migrate -path /app/migrations -database 'postgres://user:s4nt4p4nDatab4s3@postgres-container:5432/santapan_db?sslmode=disable' down && migrate -path /app/migrations -database 'postgres://user:s4nt4p4nDatab4s3@postgres-container:5432/santapan_db?sslmode=disable' up && /app/engine"]
 
