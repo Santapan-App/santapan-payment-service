@@ -88,7 +88,11 @@ jobs:
               sleep 2
             fi
           done
-      
+      - name: Check Current Directory and Files
+        run: |
+          pwd
+          ls -l
+          cat Makefile
       - name: Run Migrations
         run: make migrate-up
 
