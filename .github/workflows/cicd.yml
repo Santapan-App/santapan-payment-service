@@ -14,18 +14,27 @@ jobs:
       
       - name: Create Environment File
         run: |
-          echo "DEBUG=True" >> .env
-          echo "SERVER_ADDRESS=:9090" >> .env
-          echo "CONTEXT_TIMEOUT=2" >> .env
-          echo "DATABASE_HOST=localhost" >> .env
-          echo "DATABASE_PORT=5432" >> .env
-          echo "DATABASE_USER=user" >> .env
-          echo "DATABASE_PASSWORD=s4nt4p4nDatab4s3" >> .env
-          echo "DATABASE_NAME=santapan_db" >> .env
-          echo "PORT=9090" >> .env
+          cat <<EOF > .env
+          DEBUG=True
+          SERVER_ADDRESS=:9090
+          CONTEXT_TIMEOUT=2
+          DATABASE_HOST=localhost
+          DATABASE_PORT=5432
+          DATABASE_USER=user
+          DATABASE_PASSWORD=s4nt4p4nDatab4s3
+          DATABASE_NAME=santapan_db
+          PORT=9090
+          EOF
       
-      - name: Check .env File
-        run: cat .env
+      - name: Check .env File Creation
+        run: |
+          if [ -f .env ]; then
+            echo ".env file created successfully."
+            cat .env
+          else
+            echo ".env file not found."
+            exit 1  # Fail the job if the .env file is not found
+          fi
       
       - name: Upload .env File
         uses: actions/upload-artifact@v3
@@ -52,7 +61,14 @@ jobs:
           name: env-file
       
       - name: Check .env File on Host
-        run: cat .env || echo ".env file not found"
+        run: |
+          if [ -f .env ]; then
+            echo ".env file downloaded successfully."
+            cat .env || echo ".env file not found"
+          else
+            echo ".env file not found after download."
+            exit 1  # Fail the job if the .env file is not found
+          fi
       
       - name: Pull Docker Image
         run: docker pull janfalih/santapan-api:latest
