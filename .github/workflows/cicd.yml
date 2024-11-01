@@ -61,6 +61,21 @@ jobs:
       - name: Remove Docker Container
         run: docker rm -f santapan-app-container || true
       
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h 172.17.0.2 -p 5432 -U user; then
+              echo "PostgreSQL is ready!"
+              break
+            else
+              echo "Waiting for PostgreSQL..."
+              sleep 2
+            fi
+          done
+      
+      - name: Run Migrations
+        run: make migrate-up
+
       - name: Run Docker Container
         run: docker run -d -p 9090:9090 --name santapan-app-container janfalih/santapan-api
 
