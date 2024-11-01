@@ -55,27 +55,6 @@ jobs:
     needs: build
     runs-on: self-hosted
     steps:
-      - name: Download .env File
-        uses: actions/download-artifact@v3
-        with:
-          name: env-file
-      
-      - name: Check .env File on Host
-        run: |
-          echo "Current working directory on host:"
-          pwd  # Print the current working directory on the host
-          
-          echo "Listing all files including hidden files on host:"
-          ls -a  # List all files in the current directory on the host
-          
-          if [ -f .env ]; then
-            echo ".env file downloaded successfully."
-            cat .env || echo ".env file not found"
-          else
-            echo ".env file not found after download."
-            exit 1  # Fail the job if the .env file is not found
-          fi
-      
       - name: Pull Docker Image
         run: docker pull janfalih/santapan-api:latest
       
