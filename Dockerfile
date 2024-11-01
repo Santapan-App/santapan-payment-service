@@ -31,5 +31,5 @@ COPY --from=builder /go/bin/migrate /usr/local/bin/migrate
 # Copy the .env file from the current context
 COPY .env /app/
 
-CMD ["sh", "-c", "migrate -path /app/migrations -database 'postgres://user:s4nt4p4nDatab4s3@postgres-container:5432/santapan_db?sslmode=disable' down && migrate -path /app/migrations -database 'postgres://user:s4nt4p4nDatab4s3@postgres-container:5432/santapan_db?sslmode=disable' up && /app/engine"]
+CMD ["sh", "-c", "migrate -path /migrations -database 'postgres://user:s4nt4p4nDatab4s3@postgres-container:5432/santapan_db?sslmode=disable' down && migrate -path /migrations -database 'postgres://user:s4nt4p4nDatab4s3@postgres-container:5432/santapan_db?sslmode=disable' up && /app/engine"]
 
