@@ -54,9 +54,15 @@ func NewAuthHandler(e *echo.Echo, tokenService TokenService, userService UserSer
 	}
 	e.POST("/login", handler.Login)
 	e.POST("/register", handler.Register)
+	e.GET("/", handler.HelloWorld) // Register the HelloWorld endpoint
 }
 
 var jwtSecret = []byte("SANTAPANSECRET") // Replace with your secret key
+
+// HelloWorld handles a simple GET request to return "Hello, World!"
+func (th *AuthHandler) HelloWorld(c echo.Context) error {
+	return c.String(http.StatusOK, "Hello, World!")
+}
 
 // Login handles user login and returns tokens
 func (th *AuthHandler) Login(c echo.Context) (err error) {
