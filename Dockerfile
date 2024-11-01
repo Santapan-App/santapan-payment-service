@@ -23,5 +23,6 @@ WORKDIR /app
 EXPOSE 9090
 
 COPY --from=builder /app/engine /app/
+COPY --from=builder .env /app
 
 CMD /app/engine
