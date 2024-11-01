@@ -18,7 +18,7 @@ jobs:
           DEBUG=True
           SERVER_ADDRESS=:9090
           CONTEXT_TIMEOUT=2
-          DATABASE_HOST=localhost
+          DATABASE_HOST=172.17.0.2
           DATABASE_PORT=5432
           DATABASE_USER=user
           DATABASE_PASSWORD=s4nt4p4nDatab4s3
@@ -63,3 +63,4 @@ jobs:
       
       - name: Run Docker Container
         run: docker run -d -p 9090:9090 --name santapan-app-container janfalih/santapan-api
+
