@@ -88,11 +88,10 @@ jobs:
               sleep 2
             fi
           done
-      - name: Check Current Directory and Files
+      - name: Check Current Directory and List Files
         run: |
           pwd
-          ls -l
-          cat Makefile
+          ls -la
       - name: Run Migrations
         run: make migrate-up
 
