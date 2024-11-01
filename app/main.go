@@ -16,6 +16,7 @@ import (
 	"syscall"
 
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq" // Import the PostgreSQL driver
 )
 
 const (
