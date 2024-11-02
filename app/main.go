@@ -18,6 +18,8 @@ import (
 	"fmt"
 
 	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/source/file" // Import the file source driver
+
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq" // Import the PostgreSQL driver
 )
