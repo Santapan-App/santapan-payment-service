@@ -21,7 +21,7 @@ func Start(e *echo.Echo) {
 	}
 }
 
-// Shutdown attempts to gracefully shut down the Echo server.
+// Shutdown attempts to gracefully shut down Echo server.
 func Shutdown(e *echo.Echo, timeout int) {
 	if timeout <= 0 {
 		timeout = defaultTimeout
