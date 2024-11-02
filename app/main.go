@@ -92,9 +92,11 @@ func runMigrations() error {
 	connectionString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		databaseUser, databasePassword, databaseHost, databasePort, databaseName)
 
+	fmt.Println(connectionString)
+
 	// Create a new migration instance
 	m, err := migrate.New(
-		"migrations", // Make sure this is the correct path to your migrations
+		"/migrations", // Make sure this is the correct path to your migrations
 		connectionString,
 	)
 	if err != nil {
