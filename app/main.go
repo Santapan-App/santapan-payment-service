@@ -96,7 +96,7 @@ func runMigrations() error {
 
 	// Create a new migration instance
 	m, err := migrate.New(
-		"file://migrations", // Ensure this path is correct and accessible
+		"file://migrations", // Ensure this path is correct
 		connectionString,
 	)
 
