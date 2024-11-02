@@ -94,7 +94,7 @@ func runMigrations() error {
 
 	// Create a new migration instance
 	m, err := migrate.New(
-		"app/migrations", // Make sure this is the correct path to your migrations
+		"migrations", // Make sure this is the correct path to your migrations
 		connectionString,
 	)
 	if err != nil {
