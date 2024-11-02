@@ -94,16 +94,24 @@ func runMigrations() error {
 
 	// Create a new migration instance
 	m, err := migrate.New(
-		"app/migrations", // Update the path to your migrations directory
+		"app/migrations", // Make sure this is the correct path to your migrations
 		connectionString,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create migration instance: %w", err)
 	}
 
-	// Perform the migrations
+	// First, drop all existing tables
+	if err := m.Down(); err != nil && err != migrate.ErrNoChange {
+		return fmt.Errorf("failed to drop existing tables: %w", err)
+	}
+	log.Println("All existing tables dropped successfully")
+
+	// Now, perform the migrations
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		return err
+		return fmt.Errorf("migration failed: %w", err)
+	} else if err == migrate.ErrNoChange {
+		log.Println("No migrations to apply")
 	}
 
 	return nil
