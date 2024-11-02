@@ -96,9 +96,10 @@ func runMigrations() error {
 
 	// Create a new migration instance
 	m, err := migrate.New(
-		"/migrations", // Make sure this is the correct path to your migrations
+		"file://migrations", // Ensure this path is correct and accessible
 		connectionString,
 	)
+
 	if err != nil {
 		return fmt.Errorf("failed to create migration instance: %w", err)
 	}
