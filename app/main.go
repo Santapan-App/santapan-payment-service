@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"santapan/article"
+	"santapan/banner"
 	"santapan/category"
 	postgresCommands "santapan/internal/repository/postgres/commands"
 	postgresQueries "santapan/internal/repository/postgres/queries"
@@ -58,16 +59,34 @@ func main() {
 	categoryQueryRepo := postgresQueries.NewCategoryRepository(conn)
 	categoryCommandRepo := postgresQueries.NewCategoryRepository(conn)
 
+	bannerQueryRepo := postgresQueries.NewBannerRepository(conn)
+	bannerCommandRepo := postgresCommands.NewBannerRepository(conn)
+
+	paymentQueryRepo := postgresQueries.NewPaymentRepository(conn)
+	paymentCommandRepo := postgresCommands.NewPaymentRepository(conn)
+
+	bundlingQueryRepo := postgresQueries.NewBundlingRepository(conn)
+	bundlingCommandRepo := postgresCommands.NewBundlingRepository(conn)
+
 	tokenService := token.NewService(tokenQueryRepo, tokenCommandRepo)
 	userService := user.NewService(userQueryRepo, userQueryCommand)
 	articleService := article.NewService(articleQueryRepo, articleCommandRepo)
 	categoryService := category.NewService(categoryQueryRepo, categoryCommandRepo)
+	bannerService := banner.NewService(bannerQueryRepo, bannerCommandRepo)
+	transactionService := transaction.NewService()
+	paymentService := payment.NewService(paymentQueryRepo, paymentCommandRepo)
+	bundlingService := bundling.NewService(bundlingQueryRepo, bundlingCommandRepo)
 
 	e := pkgEcho.Setup()
 
 	rest.NewAuthHandler(e, tokenService, userService)
 	rest.NewArticleHandler(e, articleService)
 	rest.NewCategoryHandler(e, categoryService)
+	rest.NewBannerHandler(e, bannerService)
+	rest.NewBundlingHandler(e, bundlingService)
+	rest.NewTransactionHandler(e, transactionService)
+	rest.NewPaymentHandler(e, paymentService)
+
 	go func() {
 		pkgEcho.Start(e)
 	}()
