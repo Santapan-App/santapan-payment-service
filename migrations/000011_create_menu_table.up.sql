@@ -13,6 +13,7 @@ CREATE TABLE menu (
 CREATE TABLE IF NOT EXISTS bundling (
     id BIGSERIAL PRIMARY KEY,
     bundling_type VARCHAR(50) NOT NULL,  -- 'weekly' or 'monthly'
+    image_url VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
