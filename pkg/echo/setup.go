@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	localMiddleware "santapan/pkg/echo/middleware"
+	localMiddleware "santapan_payment_service/pkg/echo/middleware"
 
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"

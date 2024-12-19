@@ -1,28 +1,10 @@
 version: '3.8'
 services:
   web:
-    image: santapan
-    container_name: santapan_api
+    image: janfalih/santapan-payment-service
+    container_name: santapan-payment-service-api
     ports:
-      - 9090:80
-    networks:
-      - santapan-network
-    depends_on:
-      - postgres
-
-  postgres:
-    image: postgres:latest
-    container_name: santapan_database
-    ports:
-      - 5432:5432
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: s4nt4p4nDatab4s3
-      POSTGRES_DB: santapan_db
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d santapan_db"]
-      interval: 10s
-      retries: 5
+      - 9092:80
     networks:
       - santapan-network
 

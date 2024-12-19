@@ -4,21 +4,16 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"santapan/article"
-	"santapan/banner"
-	"santapan/category"
-	postgresCommands "santapan/internal/repository/postgres/commands"
-	postgresQueries "santapan/internal/repository/postgres/queries"
-	"santapan/internal/rest"
-	pkgEcho "santapan/pkg/echo"
-	"santapan/pkg/sql"
-	"santapan/token"
-	"santapan/user"
+	"santapan_payment_service/internal/rest"
+	"santapan_payment_service/payment"
+	pkgEcho "santapan_payment_service/pkg/echo"
+
+	postgresCommands "santapan_payment_service/internal/repository/postgres/commands"
+	postgresQueries "santapan_payment_service/internal/repository/postgres/queries"
+
+	"santapan_payment_service/pkg/sql"
 	"syscall"
 
-	"fmt"
-
-	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // Import the postgres driver for migrations
 	_ "github.com/golang-migrate/migrate/v4/source/file"       // Import the file source driver
 
@@ -41,52 +36,16 @@ func main() {
 	conn := sql.Setup()
 	defer sql.Close(conn)
 
-	// Run migrations
-	if err := runMigrations(); err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
-	}
-
-	// Setup repositories and services
-	userQueryRepo := postgresQueries.NewPostgresUserQueryRepository(conn)
-	userQueryCommand := postgresCommands.NewPostgresUserCommandRepository(conn)
-
-	tokenQueryRepo := postgresQueries.NewPostgresTokenQueryRepository(conn)
-	tokenCommandRepo := postgresCommands.NewPostgresTokenCommandRepository(conn)
-
-	articleQueryRepo := postgresQueries.NewArticleRepository(conn)
-	articleCommandRepo := postgresQueries.NewArticleRepository(conn)
-
-	categoryQueryRepo := postgresQueries.NewCategoryRepository(conn)
-	categoryCommandRepo := postgresQueries.NewCategoryRepository(conn)
-
-	bannerQueryRepo := postgresQueries.NewBannerRepository(conn)
-	bannerCommandRepo := postgresCommands.NewBannerRepository(conn)
-
-	paymentQueryRepo := postgresQueries.NewPaymentRepository(conn)
-	paymentCommandRepo := postgresCommands.NewPaymentRepository(conn)
-
-	bundlingQueryRepo := postgresQueries.NewBundlingRepository(conn)
-	bundlingCommandRepo := postgresCommands.NewBundlingRepository(conn)
-
-	tokenService := token.NewService(tokenQueryRepo, tokenCommandRepo)
-	userService := user.NewService(userQueryRepo, userQueryCommand)
-	articleService := article.NewService(articleQueryRepo, articleCommandRepo)
-	categoryService := category.NewService(categoryQueryRepo, categoryCommandRepo)
-	bannerService := banner.NewService(bannerQueryRepo, bannerCommandRepo)
-	transactionService := transaction.NewService()
-	paymentService := payment.NewService(paymentQueryRepo, paymentCommandRepo)
-	bundlingService := bundling.NewService(bundlingQueryRepo, bundlingCommandRepo)
+	// Initialize services
 
 	e := pkgEcho.Setup()
 
-	rest.NewAuthHandler(e, tokenService, userService)
-	rest.NewArticleHandler(e, articleService)
-	rest.NewCategoryHandler(e, categoryService)
-	rest.NewBannerHandler(e, bannerService)
-	rest.NewBundlingHandler(e, bundlingService)
-	rest.NewTransactionHandler(e, transactionService)
-	rest.NewPaymentHandler(e, paymentService)
+	paymentQuery := postgresQueries.NewPostgresPaymentQueryRepository(conn)
+	paymentCommand := postgresCommands.NewPostgresPaymentCommandRepository(conn)
 
+	paymentService := payment.NewService(paymentQuery, paymentCommand)
+	// Initialize the REST API
+	rest.NewPaymentHandler(e, paymentService)
 	go func() {
 		pkgEcho.Start(e)
 	}()
@@ -99,45 +58,4 @@ func main() {
 	<-quit
 
 	pkgEcho.Shutdown(e, defaultTimeout)
-}
-
-// runMigrations runs the database migrations
-func runMigrations() error {
-	// Build the database connection string from environment variables
-	databaseHost := os.Getenv("DATABASE_HOST")
-	databasePort := os.Getenv("DATABASE_PORT")
-	databaseUser := os.Getenv("DATABASE_USER")
-	databasePassword := os.Getenv("DATABASE_PASSWORD")
-	databaseName := os.Getenv("DATABASE_NAME")
-
-	// Format the connection string
-	connectionString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		databaseUser, databasePassword, databaseHost, databasePort, databaseName)
-
-	fmt.Println(connectionString)
-
-	// Create a new migration instance
-	m, err := migrate.New(
-		"file://migrations", // Ensure this path is correct
-		connectionString,
-	)
-
-	if err != nil {
-		return fmt.Errorf("failed to create migration instance: %w", err)
-	}
-
-	// First, drop all existing tables
-	if err := m.Down(); err != nil && err != migrate.ErrNoChange {
-		return fmt.Errorf("failed to drop existing tables: %w", err)
-	}
-	log.Println("All existing tables dropped successfully")
-
-	// Now, perform the migrations
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		return fmt.Errorf("migration failed: %w", err)
-	} else if err == migrate.ErrNoChange {
-		log.Println("No migrations to apply")
-	}
-
-	return nil
 }

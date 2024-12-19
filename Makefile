@@ -30,7 +30,7 @@ deps:
 	@echo "Required Tools Are Available"
 
 dev-env: ## Bootstrap Environment (with a Docker-Compose help).
-	@ docker compose up -d --build postgres
+	@ docker compose up -d
 
 dev-env-test: dev-env ## Run application (within a Docker-Compose help)
 	@ $(MAKE) image-build
@@ -104,7 +104,7 @@ image-build:
 	@ echo "Docker Build"
 	@ DOCKER_BUILDKIT=0 docker build \
 		--file Dockerfile \
-		--tag koobam-user \
+		--tag santapan-payment-service \
 			.
 
 # Commenting this as this not relevant for the project, we load the DB data from the SQL file.

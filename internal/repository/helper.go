@@ -2,6 +2,7 @@ package repository
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"strconv"
 )
 
@@ -34,4 +35,21 @@ func EncodeCursor(id int64) (string, error) {
 	encodedID := base64.StdEncoding.EncodeToString([]byte(idStr))
 
 	return encodedID, nil
+}
+
+// Utility function to decode a base64 string and unmarshal it into a map.
+func DecodeBase64ToMap(base64Str string) (map[string]interface{}, error) {
+	// Decode the base64 string
+	decoded, err := base64.StdEncoding.DecodeString(base64Str)
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal the decoded JSON data into a map
+	var result map[string]interface{}
+	err = json.Unmarshal(decoded, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
