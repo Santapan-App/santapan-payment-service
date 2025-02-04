@@ -83,10 +83,10 @@ func (h *PaymentHandler) ProcessPayment(c echo.Context) error {
 		"product":     paymentBody.Name,
 		"qty":         paymentBody.Qty,
 		"price":       paymentBody.Price,
-		"returnUrl":   "http://your-website/thank-you-page",               // your thank you page url
-		"cancelUrl":   "http://your-website/cancel-page",                  // your cancel page url
-		"notifyUrl":   "http://payment.santapan.store/payments/callback]", // your callback url
-		"referenceId": referenceID,                                        // reference id
+		"returnUrl":   "http://your-website/thank-you-page",              // your thank you page url
+		"cancelUrl":   "http://your-website/cancel-page",                 // your cancel page url
+		"notifyUrl":   "http://payment.santapan.store/payments/callback", // your callback url
+		"referenceId": referenceID,                                       // reference id
 	})
 
 	// Generate signature
