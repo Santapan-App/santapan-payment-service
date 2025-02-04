@@ -2,11 +2,19 @@ package rest
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	encodingJson "encoding/json"
+	"io/ioutil"
 	"net/http"
+	"net/url"
+	"os"
 	"santapan_payment_service/domain"
 	"santapan_payment_service/internal/rest/middleware"
 	"santapan_payment_service/pkg/json"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -62,16 +70,71 @@ func (h *PaymentHandler) ProcessPayment(c echo.Context) error {
 		return json.Response(c, http.StatusUnauthorized, false, "Unauthorized", nil)
 	}
 
+	// iPaymu credentials
+	var ipaymuVa = os.Getenv("IPAYMU_VA")   // Your iPaymu VA
+	var ipaymuKey = os.Getenv("IPAYMU_KEY") // Your iPaymu API Key
+
+	url, _ := url.Parse("https://sandbox.ipaymu.com/api/v2/payment") //url sandbox mode
+
 	// Generate Random ID
 	referenceID := "TRX" + strconv.FormatInt(time.Now().Unix(), 10)
+
+	postBody, _ := encodingJson.Marshal(map[string]interface{}{
+		"product":     paymentBody.Name,
+		"qty":         paymentBody.Qty,
+		"price":       paymentBody.Price,
+		"returnUrl":   "http://your-website/thank-you-page",               // your thank you page url
+		"cancelUrl":   "http://your-website/cancel-page",                  // your cancel page url
+		"notifyUrl":   "http://payment.santapan.store/payments/callback]", // your callback url
+		"referenceId": referenceID,                                        // reference id
+	})
+
+	// Generate signature
+	bodyHash := sha256.Sum256(postBody)
+	bodyHashToString := hex.EncodeToString(bodyHash[:])
+	stringToSign := "POST:" + ipaymuVa + ":" + strings.ToLower(bodyHashToString) + ":" + ipaymuKey
+
+	hmacHash := hmac.New(sha256.New, []byte(ipaymuKey))
+	hmacHash.Write([]byte(stringToSign))
+	signature := hex.EncodeToString(hmacHash.Sum(nil))
+
+	reqBody := ioutil.NopCloser(strings.NewReader(string(postBody)))
+
+	req := &http.Request{
+		Method: "POST",
+		URL:    url,
+		Header: map[string][]string{
+			"Content-Type": {"application/json"},
+			"va":           {ipaymuVa},
+			"signature":    {signature},
+		},
+		Body: reqBody,
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return json.Response(c, http.StatusInternalServerError, false, err.Error(), nil)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+
+	var ipaymuResponse domain.IPaymuResponse
+
+	if err := encodingJson.Unmarshal(body, &ipaymuResponse); err != nil {
+		return json.Response(c, http.StatusInternalServerError, false, err.Error(), nil)
+	}
+
+	if ipaymuResponse.Status != 200 {
+		return json.Response(c, http.StatusInternalServerError, false, ipaymuResponse.Message, nil)
+	}
 
 	payment := &domain.Payment{
 		UserID:      userID,
 		Amount:      paymentBody.Amount,
 		Status:      "pending",
 		ReferenceID: referenceID,
-		Url:         "https://google.com/" + referenceID,
-		SessionID:   "session-" + referenceID,
+		Url:         ipaymuResponse.Data.Url,
+		SessionID:   ipaymuResponse.Data.SessionID,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
