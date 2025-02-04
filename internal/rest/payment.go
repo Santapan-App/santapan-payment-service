@@ -83,6 +83,7 @@ func (h *PaymentHandler) ProcessPayment(c echo.Context) error {
 		"product":     paymentBody.Name,
 		"qty":         paymentBody.Qty,
 		"price":       paymentBody.Price,
+		"imageUrl":    paymentBody.ImageUrl,
 		"returnUrl":   "http://your-website/thank-you-page",              // your thank you page url
 		"cancelUrl":   "http://your-website/cancel-page",                 // your cancel page url
 		"notifyUrl":   "http://payment.santapan.store/payments/callback", // your callback url
