@@ -19,7 +19,7 @@ type Payment struct {
 
 type PaymentBody struct {
 	Amount   float64   `json:"amount" validate:"required"`
-	ImageUrl []string  `json:"image_url" validate:"required"`
+	ImageUrl []string  `json:"image" validate:"required"`
 	Name     []string  `json:"name" validate:"required,dive,required"` // Ensures each name is non-empty
 	Qty      []int64   `json:"qty" validate:"required,dive,gt=0"`      // Ensures each qty is > 0
 	Price    []float64 `json:"price" validate:"required,dive,gt=0"`    // Ensures each price is > 0
