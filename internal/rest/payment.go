@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/go-playground/validator.v9"
 )
 
@@ -51,46 +52,58 @@ func NewPaymentHandler(e *echo.Echo, paymentService PaymentService) {
 
 // ProcessPayment processes a new payment
 func (h *PaymentHandler) ProcessPayment(c echo.Context) error {
-	ctx := c.Request().Context()
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	ctx := c.Request().Context() // Echo ensures this is never nil
 
 	var paymentBody domain.PaymentBody
 	if err := c.Bind(&paymentBody); err != nil {
+		logrus.Error("Invalid request body: ", err)
 		return json.Response(c, http.StatusUnprocessableEntity, false, "Invalid request", nil)
 	}
 
 	if err := h.Validator.Struct(paymentBody); err != nil {
+		logrus.Error("Validation error: ", err)
 		return json.Response(c, http.StatusBadRequest, false, err.Error(), nil)
 	}
 
 	userID, ok := c.Get("userID").(int64)
 	if !ok {
+		logrus.Error("Unauthorized access: missing userID")
 		return json.Response(c, http.StatusUnauthorized, false, "Unauthorized", nil)
 	}
 
 	// iPaymu credentials
-	var ipaymuVa = os.Getenv("IPAYMU_VA")   // Your iPaymu VA
-	var ipaymuKey = os.Getenv("IPAYMU_KEY") // Your iPaymu API Key
+	ipaymuVa := os.Getenv("IPAYMU_VA")
+	ipaymuKey := os.Getenv("IPAYMU_KEY")
 
-	url, _ := url.Parse("https://sandbox.ipaymu.com/api/v2/payment") //url sandbox mode
+	logrus.Info("IPAYMU VA: ", ipaymuVa)
+	logrus.Info("IPAYMU KEY: ", ipaymuKey)
 
-	// Generate Random ID
+	if ipaymuVa == "" || ipaymuKey == "" {
+		logrus.Error("Missing IPAYMU credentials")
+		return json.Response(c, http.StatusInternalServerError, false, "Payment service not configured", nil)
+	}
+
+	// Prepare the request data
+	url, _ := url.Parse("https://sandbox.ipaymu.com/api/v2/payment")
 	referenceID := "TRX" + strconv.FormatInt(time.Now().Unix(), 10)
 
-	postBody, _ := encodingJson.Marshal(map[string]interface{}{
+	requestData := map[string]interface{}{
 		"product":     paymentBody.Name,
 		"qty":         paymentBody.Qty,
 		"price":       paymentBody.Price,
 		"imageUrl":    paymentBody.ImageUrl,
-		"returnUrl":   "http://your-website/thank-you-page",              // your thank you page url
-		"cancelUrl":   "http://your-website/cancel-page",                 // your cancel page url
-		"notifyUrl":   "http://payment.santapan.store/payments/callback", // your callback url
-		"referenceId": referenceID,                                       // reference id
-	})
+		"notifyUrl":   "http://payment.santapan.store/payments/callback",
+		"referenceId": referenceID,
+	}
 
-	// Generate signature
+	// Marshal the request body
+	postBody, err := encodingJson.Marshal(requestData)
+	if err != nil {
+		logrus.Error("Failed to encode JSON: ", err)
+		return json.Response(c, http.StatusInternalServerError, false, "Failed to process payment", nil)
+	}
+
+	// Generate the signature
 	bodyHash := sha256.Sum256(postBody)
 	bodyHashToString := hex.EncodeToString(bodyHash[:])
 	stringToSign := "POST:" + ipaymuVa + ":" + strings.ToLower(bodyHashToString) + ":" + ipaymuKey
@@ -99,8 +112,10 @@ func (h *PaymentHandler) ProcessPayment(c echo.Context) error {
 	hmacHash.Write([]byte(stringToSign))
 	signature := hex.EncodeToString(hmacHash.Sum(nil))
 
+	// Prepare the HTTP request body
 	reqBody := ioutil.NopCloser(strings.NewReader(string(postBody)))
 
+	// Create the HTTP request using struct initialization
 	req := &http.Request{
 		Method: "POST",
 		URL:    url,
@@ -112,23 +127,42 @@ func (h *PaymentHandler) ProcessPayment(c echo.Context) error {
 		Body: reqBody,
 	}
 
+	logrus.Info("Request Header: ", req.Header)
+	// Execute the request
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return json.Response(c, http.StatusInternalServerError, false, err.Error(), nil)
+		logrus.Error("Error processing payment: ", err)
+		return json.Response(c, http.StatusInternalServerError, false, "Failed to reach payment gateway", nil)
 	}
 	defer resp.Body.Close()
+
 	body, err := ioutil.ReadAll(resp.Body)
-
-	var ipaymuResponse domain.IPaymuResponse
-
-	if err := encodingJson.Unmarshal(body, &ipaymuResponse); err != nil {
-		return json.Response(c, http.StatusInternalServerError, false, err.Error(), nil)
+	if err != nil {
+		logrus.Error("Failed to read response: ", err)
+		return json.Response(c, http.StatusInternalServerError, false, "Failed to process payment response", nil)
 	}
 
+	logrus.Info("Response: ", string(body))
+
+	// Parse response
+	var ipaymuResponse domain.IPaymuResponse
+	if err := encodingJson.Unmarshal(body, &ipaymuResponse); err != nil {
+		logrus.Error("Failed to decode response JSON: ", err)
+		return json.Response(c, http.StatusInternalServerError, false, "Invalid response from payment gateway", nil)
+	}
+
+	// Validate response
 	if ipaymuResponse.Status != 200 {
+		logrus.Error("Payment failed: ", ipaymuResponse.Message)
 		return json.Response(c, http.StatusInternalServerError, false, ipaymuResponse.Message, nil)
 	}
 
+	if ipaymuResponse.Data == nil {
+		logrus.Error("Invalid response: Missing Data field")
+		return json.Response(c, http.StatusInternalServerError, false, "Invalid payment response", nil)
+	}
+
+	// Store payment
 	payment := &domain.Payment{
 		UserID:      userID,
 		Amount:      paymentBody.Amount,
@@ -141,7 +175,8 @@ func (h *PaymentHandler) ProcessPayment(c echo.Context) error {
 	}
 
 	if err := h.PaymentService.Store(ctx, payment); err != nil {
-		return json.Response(c, http.StatusInternalServerError, false, err.Error(), nil)
+		logrus.Error("Failed to store payment: ", err)
+		return json.Response(c, http.StatusInternalServerError, false, "Payment processing error", nil)
 	}
 
 	return json.Response(c, http.StatusCreated, true, "Payment processed successfully", payment)
